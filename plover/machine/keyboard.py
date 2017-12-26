@@ -4,6 +4,7 @@
 
 "For use with a computer keyboard (preferably NKRO) as a steno machine."
 
+from threading import Timer
 from plover.machine.base import StenotypeBase
 from plover.oslayer.keyboardcontrol import KeyboardCapture
 
@@ -33,6 +34,7 @@ class Keyboard(StenotypeBase):
         self._last_stroke_key_down_count = 0
         self._stroke_key_down_count = 0
         self._update_bindings()
+        self._key_timeout = None
 
     def _suppress(self):
         if self._keyboard_capture is None:
@@ -100,14 +102,26 @@ class Keyboard(StenotypeBase):
         if key not in self._down_keys:
             steno_keys = set(self._bindings.get(k) for k in self._stroke_keys)
             steno_keys -= {None}
-            if steno_keys:
-                self._notify(steno_keys)
+            if steno_keys:  self._notify(steno_keys)
         self._down_keys.add(key)
+        #
+        # pause = respect keyups
+        if self._key_timeout: self._key_timeout.cancel()
+
+    def timeout_keys(self):
+        """Keys have been held released for a while"""
+        self._stroke_keys = set(self._down_keys)
+        steno_keys = set(self._bindings.get(k) for k in self._stroke_keys)
+        steno_keys -= {None}
+        if steno_keys:  self._notify(steno_keys)
 
     def _key_up(self, key):
         """Called when a key is released."""
         assert key is not None
         self._down_keys.discard(key)
+        #
+        # pause = respect keyups
+        if self._key_timeout: self._key_timeout.cancel()
         # A stroke is complete if all pressed keys have been released,
         # and — when arpeggiate mode is enabled — the arpeggiate key
         # is part of it.
@@ -116,12 +130,14 @@ class Keyboard(StenotypeBase):
             not self._stroke_keys or
             (self._arpeggiate and self._arpeggiate_key not in self._stroke_keys)
         ):
+            # TODO configure timeout length
+            self._key_timeout = Timer(0.5, self.timeout_keys).start()
             return
         self._last_stroke_key_down_count = self._stroke_key_down_count
         steno_keys = set(self._bindings.get(k) for k in self._stroke_keys)
         steno_keys -= {None}
-        steno_keys.add('!')
         if steno_keys:
+            steno_keys.add('!')
             self._notify(steno_keys)
         self._stroke_keys.clear()
         self._stroke_key_down_count = 0
