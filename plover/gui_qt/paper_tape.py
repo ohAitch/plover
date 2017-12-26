@@ -102,8 +102,6 @@ class PaperTape(Tool, Ui_PaperTape):
         keys = stroke.steno_keys[:]
         if any(key in self._numbers for key in keys):
             keys.append('#')
-        if stroke.is_full:
-            keys.append('!')
         for key in keys:
             index = system.KEY_ORDER[key]
             text[index] = self._all_keys[index]
@@ -120,6 +118,16 @@ class PaperTape(Tool, Ui_PaperTape):
         assert len(self._strokes) <= self._history_size
         if len(self._strokes) == self._history_size:
             self._strokes.pop(0)
+        if len(self._strokes) > 0:
+            prev = self._strokes.pop()
+            if prev.is_full:
+                self._strokes.append(prev)
+            else:
+                # remove previous line
+                cursor = self.tape.textCursor()
+                cursor.select(cursor.LineUnderCursor)
+                cursor.removeSelectedText()
+                cursor.deletePreviousChar()
         self._strokes.append(stroke)
         self._show_stroke(stroke)
         self.action_Clear.setEnabled(True)
