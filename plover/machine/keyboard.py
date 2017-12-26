@@ -94,8 +94,15 @@ class Keyboard(StenotypeBase):
         """Called when a key is pressed."""
         assert key is not None
         self._stroke_key_down_count += 1
-        self._down_keys.add(key)
         self._stroke_keys.add(key)
+        #
+        # HACK emit per keydown
+        if key not in self._down_keys:
+            steno_keys = set(self._bindings.get(k) for k in self._stroke_keys)
+            steno_keys -= {None}
+            if steno_keys:
+                self._notify(steno_keys)
+        self._down_keys.add(key)
 
     def _key_up(self, key):
         """Called when a key is released."""
