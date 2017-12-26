@@ -17,11 +17,15 @@ emulate keyboard input.
 """
 
 import sys
+import os
 
 KEYBOARDCONTROL_NOT_FOUND_FOR_OS = \
         "No keyboard control module was found for os %s" % sys.platform
 
-if sys.platform.startswith('linux'):
+if 'PLOVER_PIPES' in os.environ:
+    from plover.oslayer import pipekeyboardcontrol as keyboardcontrol
+    keyboardcontrol.set_dir(os.environ['PLOVER_PIPES'])
+elif sys.platform.startswith('linux'):
     from plover.oslayer import xkeyboardcontrol as keyboardcontrol
 elif sys.platform.startswith('win32'):
     from plover.oslayer import winkeyboardcontrol as keyboardcontrol
