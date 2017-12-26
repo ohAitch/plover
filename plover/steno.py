@@ -75,6 +75,9 @@ class Stroke(object):
         # Remove duplicate keys and save local versions of the input 
         # parameters.
         steno_keys_set = set(steno_keys)
+        # strip out ! pseudo-key
+        self.is_full   = '!' in steno_keys_set
+        steno_keys_set -= {'!'}
         # Order the steno keys so comparisons can be made.
         steno_keys = list(sort_steno_keys(steno_keys_set))
 

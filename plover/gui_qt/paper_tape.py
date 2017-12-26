@@ -102,6 +102,8 @@ class PaperTape(Tool, Ui_PaperTape):
         keys = stroke.steno_keys[:]
         if any(key in self._numbers for key in keys):
             keys.append('#')
+        if stroke.is_full:
+            keys.append('!')
         for key in keys:
             index = system.KEY_ORDER[key]
             text[index] = self._all_keys[index]
