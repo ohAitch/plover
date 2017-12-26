@@ -196,6 +196,7 @@ class Translator(object):
         self._state = _State()
         self._to_undo = []
         self._to_do = 0
+        self._open_stroke = False
 
     def translate(self, stroke):
         """Process a single stroke."""
@@ -300,8 +301,15 @@ class Translator(object):
         mapping = self.lookup([stroke])
         macro = _mapping_to_macro(mapping, stroke)
         if macro is not None:
-            self.translate_macro(macro)
+            if stroke.is_full:
+              self.translate_macro(macro)
             return
+        #
+        # eat previous unless it was a !
+        if self._open_stroke:
+          self.translate_macro(Macro('undo',stroke,None)) # XX invoke more directly
+        self._open_stroke = not stroke.is_full
+        #
         t = (
             self._find_translation_helper(stroke) or
             self._find_translation_helper(stroke, system.SUFFIX_KEYS) or
