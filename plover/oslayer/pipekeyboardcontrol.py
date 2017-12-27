@@ -37,7 +37,13 @@ class KeyboardCapture(threading.Thread):
 
     def run(self):
         for line in open(os.path.join(PIPE_DIR,"keys"), "r"):
-          self.key_down(line)
+          [_,code,dire] = line.split()
+          if dire == 'press':
+            self.key_down(chr(int(code)))
+          elif dire == 'release':
+            self.key_up(chr(int(code)))
+          else:
+            raise Exception(dire)
 
     def cancel(self):
         self.join()
