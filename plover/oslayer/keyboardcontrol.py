@@ -17,6 +17,7 @@ emulate keyboard input.
 """
 
 import sys
+import os
 
 KEYBOARDCONTROL_NOT_FOUND_FOR_OS = \
         "No keyboard control module was found for os %s" % sys.platform
@@ -49,7 +50,26 @@ class KeyboardCapture(keyboardcontrol.KeyboardCapture):
 
 class KeyboardEmulation(keyboardcontrol.KeyboardEmulation):
     """Emulate printable key presses and backspaces."""
-    pass
+    def send_string(self,s):
+      if 'USE_STDOUT' not in os.environ:
+        super().send_string(s)
+        return
+      sys.stdout.write(s)
+      sys.stdout.flush()
+
+    def send_backspaces(self,n):
+      if 'USE_STDOUT' not in os.environ:
+        super().send_backspaces(n)
+        return
+      for _ in range(n):
+        sys.stdout.write("\b \b")
+      sys.stdout.flush()
+
+    def send_key_combination(self,k):
+#      if 'USE_STDOUT' not in os.environ:
+        super().send_key_combination(k)
+        return
+#      raise NotImplementedError
 
 
 if __name__ == '__main__':
@@ -64,7 +84,8 @@ if __name__ == '__main__':
 
     def test(key, action):
         global status
-        print(key, action)
+        if 'USE_STDOUT' not in os.environ:
+          print(key, action)
         if u'pressed' == action:
             pressed.add(key)
         elif key in pressed:
