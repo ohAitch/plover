@@ -31,7 +31,7 @@ STENO_KEY_CHART = ("S-", "T-", "K-", "P-", "W-", "H-",  # 00
 
 
 class TxBolt(plover.machine.base.SerialStenotypeBase):
-    """TX Bolt interface.
+    """RT Bolt interface: TX bolt + "!" partial-stroke bit
 
     This class implements the three methods necessary for a standard
     stenotype interface: start_capture, stop_capture, and
