@@ -11,8 +11,8 @@ import plover.machine.base
 # byte represents. The next bits are set if the corresponding key was
 # pressed for the stroke.
 
-# 00XXXXXX 01XXXXXX 10XXXXXX 110XXXXX
-#   HWPKTS   UE*OAR   GLBPRF    #ZDST
+# 00XXXXXX 01XXXXXX 10XXXXXX 11XXXXXX
+#   HWPKTS   UE*OAR   GLBPRF   !#ZDST
 
 # The protocol uses variable length packets of one, two, three or four
 # bytes. Only those bytes for which keys were pressed will be
@@ -27,11 +27,11 @@ import plover.machine.base
 STENO_KEY_CHART = ("S-", "T-", "K-", "P-", "W-", "H-",  # 00
                    "R-", "A-", "O-", "*", "-E", "-U",   # 01
                    "-F", "-R", "-P", "-B", "-L", "-G",  # 10
-                   "-T", "-S", "-D", "-Z", "#")         # 11
+                   "-T", "-S", "-D", "-Z", "#", "!")    # 11
 
 
 class TxBolt(plover.machine.base.SerialStenotypeBase):
-    """TX Bolt interface.
+    """RT Bolt interface: TX bolt + "!" partial-stroke bit
 
     This class implements the three methods necessary for a standard
     stenotype interface: start_capture, stop_capture, and
@@ -81,7 +81,7 @@ class TxBolt(plover.machine.base.SerialStenotypeBase):
                     # Starting a new stroke, finish previous one.
                     self._finish_stroke()
                 self._last_key_set = key_set
-                for i in range(5 if key_set == 3 else 6):
+                for i in range(6):
                     if (byte >> i) & 1:
                         key = STENO_KEY_CHART[(key_set * 6) + i]
                         self._pressed_keys.append(key)
