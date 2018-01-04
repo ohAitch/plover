@@ -72,7 +72,8 @@ class Keymap(object):
             key_list = mappings.get(action)
             if isinstance(key_list, str):
                 key_list = (key_list,)
-            errors.append('invalid action %s mapped to key(s) %s' % (action, ' '.join(key_list)))
+            if action is not '!':
+              errors.append('invalid action %s mapped to key(s) %s' % (action, ' '.join(key_list)))
         for key, action_list in bound_keys.items():
             if len(action_list) > 1:
                 errors.append('key %s is bound multiple times: %s' % (key, str(action_list)))
@@ -91,6 +92,10 @@ class Keymap(object):
     def keys_to_actions(self, key_list):
         action_list = []
         for key in key_list:
+            if key is '!':
+              # FIXME this goes somewhere else 
+              action_list.append("!")
+              continue
             assert key in self._keys, "'%s' not in %s" % (key, self._keys)
             action = self._bindings[key]
             if 'no-op' != action:
