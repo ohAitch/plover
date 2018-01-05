@@ -51,14 +51,15 @@ class RtBolt(plover.machine.base.SerialStenotypeBase):
         self._reset_stroke_state()
 
     def _reset_stroke_state(self):
-        self._pressed_keys = []
-        self._last_key_set = 0
+        self._pressed_keys = [[],[],[],[]]
 
-    def _finish_stroke(self):
-        steno_keys = self.keymap.keys_to_actions(self._pressed_keys)
+    def _do_stroke(self):
+        steno_keys = self.keymap.keys_to_actions([key for keys in self._pressed_keys for key in keys])
         if steno_keys:
-            self._notify(steno_keys)
-        self._reset_stroke_state()
+          self._notify(steno_keys)
+          if '!' in steno_keys:
+              # Full stroke, is finished.
+              self._reset_stroke_state()
 
     def run(self):
         """Overrides base class run method. Do not call directly."""
@@ -70,21 +71,15 @@ class RtBolt(plover.machine.base.SerialStenotypeBase):
             # Grab data from the serial port, or wait for timeout if none available.
             raw = self.serial_port.read(max(1, self.serial_port.inWaiting()))
 
-            if not raw:
-                # Timeout, finish the current stroke.
-                self._finish_stroke()
-                continue
+            if not raw: continue # timeout
 
             for byte in raw:
                 key_set = byte >> 6
-                if key_set <= self._last_key_set:
-                    # Starting a new stroke, finish previous one.
-                    self._finish_stroke()
-                self._last_key_set = key_set
+                keys = []
                 for i in range(6):
                     if (byte >> i) & 1:
                         key = STENO_KEY_CHART[(key_set * 6) + i]
-                        self._pressed_keys.append(key)
-                if key_set == 3:
-                    # Last possible set, the stroke is finished.
-                    self._finish_stroke()
+                        keys.append(key)
+                if keys is not self._pressed_keys[key_set]:
+                    self._pressed_keys[key_set] = keys
+                    self._do_stroke()
