@@ -132,7 +132,8 @@ class Translation(object):
         else:
             translation = escape_translation(self.english)
             translation = '"%s"' % translation.replace('"', r'\"')
-        return 'Translation(%s : %s)' % (self.rtfcre, translation)
+        full = "!" if self.strokes[-1].is_full else ""
+        return '%sTranslation(%s : %s)' % (full, self.rtfcre, translation)
 
     def __repr__(self):
         return str(self)
